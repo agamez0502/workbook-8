@@ -1,6 +1,7 @@
 package com.pluralsight;
 
 //import log4j2 classes
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
