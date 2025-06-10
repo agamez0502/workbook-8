@@ -3,53 +3,74 @@ package com.pluralsight;
 import java.sql.*;
 
 public class App {
+    public static void main(String[] args) throws ClassNotFoundException {
 
-    public static void main(String[] args) {
+        //making sure we passed in 2 arguments from the command line when we run the app
+        //this is done with the app configuration in intellij
+        if (args.length != 2) {
+            System.out.println(
+                    "Application needs two arguments to run: " + "java com.hca.jdbc.UsingDriverManager <username> " + "<password>");
+            System.exit(1);
+        }
+
+        // get the username and password from the command line args
+        String username = args[0];
+        String password = args[1];
+
+        // establish the variables with null outside the try scope
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
 
         try {
+            // create the connection and prepared statement
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/sakila", username, password);
 
-            // 1. open a connection to the database
-            // use the database URL to point to the correct database
+            // initialize the preparedStatement we created above
+            preparedStatement = connection.prepareStatement("SELECT first_name, last_name FROM customer " + "WHERE last_name LIKE ? ORDER BY first_name");
 
-            // this is like me opening MySQL Workbench and clicking localhost
-            Connection connection;
-            //connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/world", "root", "L@l@t!n@5");
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/sakila", "root", "L@l@t!n@5");
+            // set the parameters for the prepared statement
+            preparedStatement.setString(1, "Sa%");
 
-            // create statement
-            // the statement is tied to the open connection
+            // execute the query
+            resultSet = preparedStatement.executeQuery();
 
-            // this is like me opening a new query window
-            Statement statement = connection.createStatement();
-
-            // define your query
-
-            // this is like me typing the query in the new query windows
-            //String query = "SELECT Name FROM city " + "WHERE CountryCode = 'USA'";
-            String query = "SELECT title FROM film";
-
-
-            // 2. Execute your query
-
-            // this is like me clicking the lightning bolt
-            ResultSet results = statement.executeQuery(query);
-
-            // process the results
-
-            // this is a way to view the result set but java doesn't have a spreadsheet view for us
-            while (results.next()) {
-                //String city = results.getString("Name");
-                String city = results.getString("Title");
-                System.out.println(city);
+            // loop through the results
+            while (resultSet.next()) {
+                // process the data
+                System.out.printf("first_name = %s, last_name = %s;\n", resultSet.getString("first_name"), resultSet.getString(2));
             }
-
-            // 3. Close the connection
-
-            // this is like me closing MySQL Workbench
-            connection.close();
-
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            // maybe print a nicer message to the user
+            // maybe store the real error in a log file
+            // maybe gracefully exit the application instead of crashing
+            // maybe we want it to crash so we let that happen
+            // decide what to do if stuff goes off the rails
+            e.printStackTrace();
+        } finally {
+            // close the resources
+            // in the opposite order you opened them
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (preparedStatement != null) {
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
